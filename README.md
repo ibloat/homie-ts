@@ -1,8 +1,8 @@
 Homie 4.0.0 Implementation (very much a WIP)
 
-##API
+## API
 
-###Device
+### Device
 
 - connect
 - disconnect
@@ -12,10 +12,12 @@ Homie 4.0.0 Implementation (very much a WIP)
 - removeNode
 - on (emits 'change' events)
 
-###Node
+### Node
 
 - addProperty
 - removeProperty
 - on (emits 'change' events)
 
-###Property
+### Property
+
+### Controller

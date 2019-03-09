@@ -1,5 +1,6 @@
 import { Client as MQTTClient } from "mqtt";
 import { default as MQTT, AsyncClient } from "async-mqtt";
+import { parsePayload, PropertyType } from "./misc";
 
 export interface ControllerOptions {
   baseTopic?: string;
@@ -15,6 +16,7 @@ interface DeviceLookup {
         properties: {
           [key: string]: {
             attributes: { [key: string]: string };
+            _value?: string;
             value?: any;
           };
         };
@@ -51,7 +53,7 @@ export class Controller {
       const [device, node, property] = split;
 
       if (leaf === "set") {
-        console.log("set seen");
+        console.log("set seen", split, message.toString());
       } else if (leaf.startsWith("$")) {
         this.updateAttribute(
           leaf.slice(1),
@@ -100,6 +102,16 @@ export class Controller {
         attr = (n.properties[property] = n.properties[property] || {
           attributes: {}
         }).attributes;
+
+        const tmpvalue = n.properties[property]._value;
+        if (attribute === "datatype" && tmpvalue) {
+          // ditto format
+          n.properties[property].value = parsePayload(
+            value as PropertyType,
+            tmpvalue
+          );
+          delete n.properties[property]._value;
+        }
       }
     }
 
@@ -124,7 +136,14 @@ export class Controller {
     const p = (n.properties[property] = n.properties[property] || {
       attributes: {}
     });
-    p.value = value;
+
+    const dt = p.attributes["datatype"];
+    if (!dt) {
+      p._value = value;
+    } else {
+      // what about format? timeout ~1sec to let things settle?
+      p.value = parsePayload(dt as PropertyType, value);
+    }
   }
 
   broadcast(level: string, payload: string) {

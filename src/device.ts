@@ -226,7 +226,6 @@ export class Device extends EventEmitter {
     const setterPath = `${devicePath}/+/+/set`;
 
     try {
-      this.attributes.state = Lifecycle.ALERT;
       await client.publish(`${devicePath}/$state`, this.attributes.state, {
         retain: true,
         qos: 1
@@ -241,6 +240,7 @@ export class Device extends EventEmitter {
       });
       this.attributes.state = Lifecycle.READY;
     } catch (err) {
+      this.attributes.state = Lifecycle.ALERT;
       console.log("error connecting", err);
     }
   }
