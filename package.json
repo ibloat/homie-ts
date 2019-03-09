@@ -1,0 +1,53 @@
+{
+  "name": "@ibloat/homie-ts",
+  "version": "0.0.4",
+  "description": "Implementation of the homie convention",
+  "author": "ibloat",
+  "engines": {
+    "node": ">=8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ibloat/homie-ts.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": "https://github.com/ibloat/homie-ts/issues",
+  "homepage": "https://github.com/ibloat/homie-ts",
+  "license": "MIT",
+  "scripts": {
+    "build-es5": "tsc -p tsconfig.es5.json",
+    "build-es6": "tsc -p tsconfig.es6.json",
+    "build": "npm run build-es5 && npm run build-es6",
+    "prepare": "npm run build",
+    "test": "jest"
+  },
+  "main": "build/index.js",
+  "jsnext:main": "lib/index.js",
+  "module": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "keywords": [
+    "automation",
+    "home",
+    "homie",
+    "iot",
+    "mqtt"
+  ],
+  "files": [
+    "build",
+    "lib"
+  ],
+  "dependencies": {
+    "@types/color-convert": "^1.9.0",
+    "async-mqtt": "^2.2.0",
+    "color-convert": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.9",
+    "@types/node": "^11.9.4",
+    "jest": "^24.3.1",
+    "ts-jest": "^24.0.0",
+    "typescript": "~3.2.2"
+  }
+}

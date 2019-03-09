@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig",
+  "exclude": ["test", "lib"],
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "outDir": "./build"
+  }
+}
