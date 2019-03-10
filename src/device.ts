@@ -70,7 +70,7 @@ export class Device extends EventEmitter {
         console.log("setting property", property, "to", value, typeof value);
 
         property.value = value;
-        this.client!.publish(split.join("/"), property.value, {
+        this.client!.publish(split.join("/"), encodePayload(property.value), {
           retain: property.attributes.retained !== false,
           qos: 1
         }).catch(err => console.log("Error publishing new value", err));
