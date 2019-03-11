@@ -157,17 +157,27 @@ export function encodePayload(
 ): string {
   const to = typeof payload;
   if (
-    to === "boolean" ||
     to === "string" ||
-    payload instanceof String ||
+    payload instanceof Buffer ||
+    payload instanceof String
+  ) {
+    const result = payload.toString();
+    if (result.length > 268435456) {
+      throw new Error("the string payload is too big");
+    }
+    return result;
+  } else if (
+    to === "boolean" ||
     payload instanceof ColorRGB ||
-    payload instanceof ColorHSV ||
-    payload instanceof Buffer
+    payload instanceof ColorHSV
   ) {
     return payload.toString();
   } else if (to === "number") {
-    // FIXME handle this properly
-    return payload.toString();
+    const number = payload as number;
+    if (Number.isNaN(number) || !Number.isFinite(number)) {
+      throw new Error("number can not be NaN or inifinite");
+    }
+    return number.toString().replace("+", "");
   } else {
     return JSON.stringify(payload);
   }
@@ -201,9 +211,17 @@ export function parsePayload(
       return value;
     }
   } else if (type === PropertyType.FLOAT || type === PropertyType.INTEGER) {
-    const parseFunc = type === PropertyType.FLOAT ? parseFloat : parseInt;
+    const parseFunc =
+      type === PropertyType.FLOAT ? Number.parseFloat : Number.parseInt;
     const parsed = parseFunc(value);
-    if (!format) {
+    if (
+      Number.isNaN(parsed) ||
+      !Number.isFinite(parsed) ||
+      (value.match(/\./g) || []).length > 1 ||
+      value.match(/e\+/)
+    ) {
+      errorMessage = `parsed number is invalid ${parsed}`;
+    } else if (!format) {
       return parsed;
     } else {
       const [start, end] = format.split(":").map(s => parseFunc(s));
@@ -213,7 +231,10 @@ export function parsePayload(
       errorMessage = `value ${parsed} outside of format range ${start}:${end}`;
     }
   } else if (type === PropertyType.STRING) {
-    return value;
+    if (value.length <= 268435456) {
+      return value;
+    }
+    errorMessage = "string value is too long";
   }
   throw new Error(errorMessage);
 }

@@ -4,7 +4,7 @@ import { encodePayload, parsePayload } from "./misc";
 import { EventEmitter } from "events";
 
 import Debug from "debug";
-const debug = Debug("device");
+const debug = Debug("homie:device");
 
 export enum Lifecycle {
   INIT = "init",

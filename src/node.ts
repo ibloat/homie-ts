@@ -2,7 +2,7 @@ import { Property, PropertyOptions } from "./property";
 import { EventEmitter } from "events";
 
 import Debug from "debug";
-const debug = Debug("node");
+const debug = Debug("homie:node");
 
 export interface NodeOptions {
   id: string;

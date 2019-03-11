@@ -2,7 +2,7 @@ import { PropertyType } from "./misc";
 import { EventEmitter } from "events";
 
 import Debug from "debug";
-const debug = Debug("property");
+const debug = Debug("homie:property");
 
 export enum Unit {
   CELSIUS = "°C",
@@ -67,19 +67,31 @@ export class Property extends EventEmitter {
     }
   }
 
-  constructor({ id, value, setHook, retained, ...options }: PropertyOptions) {
+  constructor({
+    id,
+    value,
+    setHook,
+    retained,
+    settable,
+    ...options
+  }: PropertyOptions) {
     super();
 
     this.id = id;
     this.attributes = {
-      ...options,
-      retained: retained != false
+      ...options
     };
 
-    this._value = value;
-
+    if (retained === false) {
+      this.attributes.retained = false;
+    }
+    if (settable) {
+      this.attributes.settable = true;
+    }
     if (setHook) {
       this.setHook = setHook;
     }
+
+    this._value = value;
   }
 }
