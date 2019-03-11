@@ -1,6 +1,9 @@
 import { PropertyType } from "./misc";
 import { EventEmitter } from "events";
 
+import Debug from "debug";
+const debug = Debug("property");
+
 export enum Unit {
   CELSIUS = "°C",
   FAHRENHEIT = "°F",
@@ -56,8 +59,11 @@ export class Property extends EventEmitter {
     const oldValue = this._value;
     const inhibitSet = this.setHook ? this.setHook(oldValue, v) : false;
     if (!inhibitSet) {
+      debug(this.id, `value changed, emitting`, oldValue, v);
       this._value = v;
       this.emit("change", oldValue, v);
+    } else {
+      debug(this.id, `value change inhibited`, oldValue, v);
     }
   }
 

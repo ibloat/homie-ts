@@ -1,6 +1,9 @@
 import { Property, PropertyOptions } from "./property";
 import { EventEmitter } from "events";
 
+import Debug from "debug";
+const debug = Debug("node");
+
 export interface NodeOptions {
   id: string;
   name: string;
@@ -42,12 +45,22 @@ export class Node extends EventEmitter {
     };
   }
 
-  addProperty(property: PropertyOptions | Property) {
-    if (this.properties[property.id]) {
+  addProperty(property: PropertyOptions | Property, replace = false) {
+    if (!replace && this.properties[property.id]) {
+      debug(this.id, `property ${property.id} already exists`);
       throw new Error(`property with id ${property.id} already exists!`);
     }
 
     const properties = { ...this.properties };
+
+    if (properties[property.id]) {
+      debug(this.id, `replacing existing property ${property.id}`);
+      properties[property.id].off("change", this.onChange);
+      delete properties[property.id];
+    } else {
+      debug(this.id, `adding property ${property.id}`);
+    }
+
     if (property instanceof Property) {
       properties[property.id] = property;
     } else {
@@ -61,6 +74,7 @@ export class Node extends EventEmitter {
   }
 
   private onChange() {
+    debug(this.id, `emitting change`);
     this.emit("change");
   }
 

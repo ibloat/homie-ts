@@ -3,6 +3,9 @@ import { Node, NodeOptions } from "./node";
 import { encodePayload, parsePayload } from "./misc";
 import { EventEmitter } from "events";
 
+import Debug from "debug";
+const debug = Debug("device");
+
 export enum Lifecycle {
   INIT = "init",
   READY = "ready",
@@ -49,14 +52,16 @@ export class Device extends EventEmitter {
   private onBroadcast?: (self: Device, level: string, message: string) => void;
 
   private onMessage(topic: string, message: string | Buffer) {
-    console.log("subscription triggered!", topic, message.toString());
+    message = message.toString();
     const split = topic.split("/");
     const leaf = split.pop();
+    debug(this.id, "subscription triggered!", topic, message, split, leaf);
+
     if (split.slice(-1)[0] === "$broadcast") {
-      console.log("broadcast triggered! level=", leaf);
-      this.emit("broadcast", leaf, message.toString());
+      debug(this.id, "broadcast triggered! level=", leaf);
+      this.emit("broadcast", leaf, message);
       if (this.onBroadcast) {
-        this.onBroadcast(this, leaf!, message.toString());
+        this.onBroadcast(this, leaf!, message);
       }
     } else if (leaf === "set") {
       const node = this.attributes.nodes[split[2]];
@@ -66,16 +71,16 @@ export class Device extends EventEmitter {
         if (!settable) {
           throw new Error(`property ${property.id} not settable`);
         }
-        const value = parsePayload(datatype, message.toString(), format);
-        console.log("setting property", property, "to", value, typeof value);
+        const value = parsePayload(datatype, message, format);
+        debug(this.id, "setting property", property, "to", value, typeof value);
 
         property.value = value;
         this.client!.publish(split.join("/"), encodePayload(property.value), {
           retain: property.attributes.retained !== false,
           qos: 1
-        }).catch(err => console.log("Error publishing new value", err));
+        }).catch(err => debug(this.id, "Error publishing new value", err));
       } catch (err) {
-        console.log("failed to set property", err.message);
+        debug(this.id, "failed to set property", err.message);
       }
     }
   }
@@ -101,7 +106,7 @@ export class Device extends EventEmitter {
           qos: 1
         });
       } catch (err) {
-        console.log("error publishing", err);
+        debug(this.id, "error publishing", err);
       }
     }
   }
@@ -177,7 +182,8 @@ export class Device extends EventEmitter {
             qos: 1
           });
         } catch (err) {
-          console.log(
+          debug(
+            this.id,
             "error publishing attributes or value for property",
             propertyPath,
             property,
@@ -188,7 +194,7 @@ export class Device extends EventEmitter {
       try {
         await this.publishObject(client, nodePath + "/$", node.attributes);
       } catch (err) {
-        console.log("error publishing attributes for node", nodePath, err);
+        debug(this.id, "error publishing attributes for node", nodePath, err);
       }
     }
 
@@ -196,7 +202,7 @@ export class Device extends EventEmitter {
       const { state, ...deviceAttributes } = this.attributes;
       await this.publishObject(client, devicePath + "/$", deviceAttributes);
     } catch (err) {
-      console.log("error publishing attributes for device", devicePath, err);
+      debug(this.id, "error publishing attributes for device", devicePath, err);
     }
   }
 
@@ -209,11 +215,8 @@ export class Device extends EventEmitter {
 
     if (!this.client) {
       this.client = MQTT.connect(this.mqttOptions);
-      this.client.on("connect", () => console.log("Connection established"));
-      this.client.on("error", err => console.log("Error encountered", err));
-      this.client.on("connack", (packet: any) =>
-        console.log("CONNACK", packet)
-      );
+      this.client.on("connect", () => debug(this.id, "connection established"));
+      this.client.on("error", err => debug(this.id, "error encountered", err));
 
       this.client.on("message", this.onMessage.bind(this));
     } else if (!this.client.reconnecting) {
@@ -241,7 +244,7 @@ export class Device extends EventEmitter {
       this.attributes.state = Lifecycle.READY;
     } catch (err) {
       this.attributes.state = Lifecycle.ALERT;
-      console.log("error connecting", err);
+      debug(this.id, "error connecting", err);
     }
   }
 
@@ -263,7 +266,7 @@ export class Device extends EventEmitter {
       await this.client.end();
       this.attributes.state = Lifecycle.DISCONNECTED;
     } catch (err) {
-      console.log("error disconnecting", err);
+      debug(this.id, "error disconnecting", err);
     }
   }
 
@@ -305,7 +308,7 @@ export class Device extends EventEmitter {
       }
       await client.end();
     } catch (err) {
-      console.log("error cleaning up topics", staleOnly, err);
+      debug(this.id, "error cleaning up topics", staleOnly, err);
     }
   }
 
