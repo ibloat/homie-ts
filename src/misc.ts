@@ -190,6 +190,9 @@ export function parsePayload(
 ): any {
   let errorMessage = "";
   if (type === PropertyType.BOOLEAN) {
+    if (!["true", "false"].includes(value)) {
+      throw new Error(`invalid boolean (${value})`);
+    }
     return value === "true";
   } else if (type === PropertyType.COLOR) {
     const splitValue = value.split(",").map(s => parseInt(s));

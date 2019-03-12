@@ -1,4 +1,10 @@
-import { PropertyType, encodePayload, parsePayload } from "../src/misc";
+import {
+  PropertyType,
+  encodePayload,
+  parsePayload,
+  ColorRGB,
+  ColorHSV
+} from "../src/misc";
 
 interface ParseTestCase {
   in: { value: string; format?: string };
@@ -58,7 +64,13 @@ const parseTests: { [key: string]: ParseTestCase[] } = {
       desc: "multiple decimal points"
     }
   ],
-  [PropertyType.BOOLEAN]: [],
+  [PropertyType.BOOLEAN]: [
+    { in: { value: "true" }, out: true, success: true, desc: "true value" },
+    { in: { value: "false" }, out: false, success: true, desc: "false value" },
+    { in: { value: "TRUE" }, success: false, desc: "only lowercase" },
+    { in: { value: "wrong" }, success: false, desc: "arbitrary strings" },
+    { in: { value: "" }, success: false, desc: "empty strings" }
+  ],
   [PropertyType.ENUM]: [
     {
       in: { value: "VAL1", format: "VAL1" },
@@ -73,31 +85,77 @@ const parseTests: { [key: string]: ParseTestCase[] } = {
     {
       in: { value: "VAL3", format: "VAL1,VAL2" },
       success: false,
-      desc: "invalid value fails"
+      desc: "invalid value"
     },
     {
       in: { value: "", format: "VAL1,VAL2" },
       success: false,
-      desc: "empty value is invalid"
+      desc: "empty value"
     },
     {
       in: { value: "value", format: "VALUE" },
       success: false,
-      desc: "enums are case sensitive"
+      desc: "case mismatch"
     },
     {
       in: { value: "noformat" },
       success: false,
-      desc: "enums need a format attribute"
+      desc: "without format"
     }
   ],
-  [PropertyType.COLOR]: []
+  [PropertyType.COLOR]: [
+    {
+      in: { value: "0,0,0", format: "rgb" },
+      out: new ColorRGB(0, 0, 0),
+      success: true,
+      desc: "rgb format"
+    },
+    {
+      in: { value: "0,0,0", format: "hsv" },
+      out: new ColorHSV(0, 0, 0),
+      success: true,
+      desc: "hsv format"
+    },
+    {
+      in: { value: "0;0;0", format: "rgb" },
+      success: false,
+      desc: "invalid separator"
+    },
+    {
+      in: { value: "-10,0,0", format: "rgb" },
+      success: false,
+      desc: "negative value"
+    },
+    {
+      in: { value: "280,250,250", format: "rgb" },
+      success: false,
+      desc: "rgb values out of range"
+    },
+    {
+      in: { value: "280,250,250", format: "hsv" },
+      success: false,
+      desc: "hsv values out of range"
+    },
+    {
+      in: { value: "0,0", format: "hsv" },
+      success: false,
+      desc: "only two values"
+    },
+    {
+      in: { value: "hi mom", format: "rgb" },
+      success: false,
+      desc: "random string"
+    },
+    { in: { value: "0,0,0" }, success: false, desc: "missing format" }
+  ]
 };
 
 describe("test property parsing", () => {
   for (const [typeName, tests] of Object.entries(parseTests)) {
-    it("should parse correctly", () => {
-      for (const test of tests) {
+    for (const test of tests) {
+      it(`should ${
+        test.success ? "succeed" : "fail"
+      } parsing ${typeName} with ${test.desc}`, () => {
         const parseFn = parsePayload.bind(
           null,
           typeName as PropertyType,
@@ -107,10 +165,19 @@ describe("test property parsing", () => {
         if (!test.success) {
           expect(parseFn).toThrow(test.out);
         } else {
-          expect(parseFn()).toBe(test.out != null ? test.out : test.in.value);
+          const result = parseFn();
+          if (result instanceof ColorRGB) {
+            const { r, g, b } = test.out;
+            expect(result).toMatchObject({ r, g, b });
+          } else if (result instanceof ColorHSV) {
+            const { h, s, v } = test.out;
+            expect(result).toMatchObject({ h, s, v });
+          } else {
+            expect(result).toBe(test.out != null ? test.out : test.in.value);
+          }
         }
-      }
-    });
+      });
+    }
   }
 });
 
