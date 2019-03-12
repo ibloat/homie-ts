@@ -153,34 +153,49 @@ export class ColorHSV {
 }
 
 export function encodePayload(
-  payload: object | string | number | boolean | ColorRGB | ColorHSV
+  type: PropertyType,
+  payload: object | string | number | boolean | ColorRGB | ColorHSV,
+  format?: string
 ): string {
-  const to = typeof payload;
-  if (
-    to === "string" ||
-    payload instanceof Buffer ||
-    payload instanceof String
-  ) {
+  if (type === PropertyType.BOOLEAN) {
+    return (!!payload).toString();
+  } else if (type === PropertyType.COLOR) {
+    return payload.toString();
+  } else if (type === PropertyType.ENUM) {
+    if (!format) {
+      throw new Error("enum needs a format");
+    }
     const result = payload.toString();
-    if (result.length > 268435456) {
-      throw new Error("the string payload is too big");
+    if (!result) {
+      throw new Error("empty values not allowed in enum");
+    }
+    if (!format.split(",").includes(result)) {
+      throw new Error(`value '${result}' not format (${format})`);
     }
     return result;
-  } else if (
-    to === "boolean" ||
-    payload instanceof ColorRGB ||
-    payload instanceof ColorHSV
-  ) {
-    return payload.toString();
-  } else if (to === "number") {
+  } else if (type === PropertyType.INTEGER) {
+    const number = payload as number;
+    if (number > Number.MAX_SAFE_INTEGER || number < Number.MIN_SAFE_INTEGER) {
+      throw new Error("integer outside of safe range!");
+    }
+    return number.toFixed();
+  } else if (type === PropertyType.FLOAT) {
     const number = payload as number;
     if (Number.isNaN(number) || !Number.isFinite(number)) {
       throw new Error("number can not be NaN or inifinite");
     }
     return number.toString().replace("+", "");
-  } else {
-    return JSON.stringify(payload);
+  } else if (type === PropertyType.STRING) {
+    const result =
+      typeof payload === "object"
+        ? JSON.stringify(payload)
+        : payload.toString();
+    if (result.length > 268435456) {
+      throw new Error("the string payload is too big");
+    }
+    return result;
   }
+  throw new Error(`invalid property type (${type})`);
 }
 
 export function parsePayload(
@@ -217,6 +232,14 @@ export function parsePayload(
     const parseFunc =
       type === PropertyType.FLOAT ? Number.parseFloat : Number.parseInt;
     const parsed = parseFunc(value);
+
+    if (
+      type === PropertyType.INTEGER &&
+      (parsed > Number.MAX_SAFE_INTEGER || parsed < Number.MIN_SAFE_INTEGER)
+    ) {
+      throw new Error(`integer is unsafe ${parsed}`);
+    }
+
     if (
       Number.isNaN(parsed) ||
       !Number.isFinite(parsed) ||

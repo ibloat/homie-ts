@@ -13,7 +13,7 @@ interface ParseTestCase {
   success: boolean;
 }
 
-const integerTests = [
+const integerParseTests = [
   { in: { value: "1" }, out: 1, success: true, desc: "single digit integer" },
   { in: { value: "-1" }, out: -1, success: true, desc: "negative integer" },
   { in: { value: "-" }, success: false, desc: "only negation sign" },
@@ -31,9 +31,9 @@ const parseTests: { [key: string]: ParseTestCase[] } = {
       desc: "maximum length observed"
     }
   ],
-  [PropertyType.INTEGER]: integerTests,
+  [PropertyType.INTEGER]: integerParseTests,
   [PropertyType.FLOAT]: [
-    ...integerTests,
+    ...integerParseTests,
     { in: { value: "1.0" }, out: 1.0, success: true, desc: "regular float" },
     {
       in: { value: ".0" },
@@ -183,30 +183,94 @@ describe("test property parsing", () => {
 
 interface EncodeTestCase {
   in: any;
+  format?: string;
   out?: string;
   desc: string;
   success: boolean;
 }
 
-const encodeTests: { [key: string]: ParseTestCase[] } = {
-  [PropertyType.STRING]: [],
-  [PropertyType.INTEGER]: [],
-  [PropertyType.FLOAT]: [],
-  [PropertyType.BOOLEAN]: [],
-  [PropertyType.ENUM]: [],
-  [PropertyType.COLOR]: []
+const integerEncodeTests = [
+  { in: 1, out: "1", success: true, desc: "single digit" },
+  { in: -1, out: "-1", success: true, desc: "negative number" },
+  { in: 1e1, out: "10", success: true, desc: "exponential notation" }
+];
+
+const encodeTests: { [key: string]: EncodeTestCase[] } = {
+  [PropertyType.STRING]: [
+    { in: "", out: "", success: true, desc: "empty string" },
+    { in: "short", out: "short", success: true, desc: "short string" },
+    {
+      in: "s".repeat(268435456 + 1),
+      success: false,
+      desc: "overly long string"
+    }
+  ],
+  [PropertyType.INTEGER]: [
+    ...integerEncodeTests,
+    { in: 1.1, out: "1", success: true, desc: "values get rounded" },
+    {
+      in: Number.MAX_SAFE_INTEGER + 1,
+      success: false,
+      desc: "unsafe positive integer"
+    },
+    {
+      in: Number.MIN_SAFE_INTEGER - 1,
+      success: false,
+      desc: "unsafe negative integer"
+    }
+  ],
+  [PropertyType.FLOAT]: [
+    ...integerEncodeTests,
+    { in: Number.NaN, success: false, desc: "not a number" },
+    { in: Number.POSITIVE_INFINITY, success: false, desc: "infinity" }
+  ],
+  [PropertyType.BOOLEAN]: [
+    { in: true, out: "true", success: true, desc: "true" },
+    { in: false, out: "false", success: true, desc: "false" },
+    { in: "truthy", out: "true", success: true, desc: "truthy" },
+    { in: null, out: "false", success: true, desc: "falsey" }
+  ],
+  [PropertyType.ENUM]: [
+    { in: "val1", format: "val1,val2", success: true, desc: "valid value" },
+    { in: "val3", format: "val1,val2", success: false, desc: "invalid value" },
+    { in: "", format: "val1,val2", success: false, desc: "empty value" },
+    { in: "val", format: "", success: false, desc: "empty format" },
+    { in: "val1", success: false, desc: "missing format" }
+  ],
+  [PropertyType.COLOR]: [
+    {
+      in: new ColorRGB(0, 0, 0),
+      out: "0,0,0",
+      success: true,
+      desc: "rgb color"
+    },
+    {
+      in: new ColorHSV(0, 0, 0),
+      out: "0,0,0",
+      success: true,
+      desc: "hsv color"
+    }
+  ]
 };
 
 describe("test property encoding", () => {
-  for (const tests of Object.values(encodeTests)) {
-    it("should encode correctly", () => {
-      for (const test of tests) {
+  for (const [typeName, tests] of Object.entries(encodeTests)) {
+    for (const test of tests) {
+      it(`should ${
+        test.success ? "succeed" : "fail"
+      } encoding ${typeName} with ${test.desc}`, () => {
+        const encodeFn = encodePayload.bind(
+          null,
+          typeName as PropertyType,
+          test.in,
+          test.format
+        );
         if (!test.success) {
-          expect(encodePayload.bind(null, test.in)).toThrow(test.out);
+          expect(encodeFn).toThrow(test.out);
         } else {
-          expect(encodePayload(test.in)).toEqual(test.out);
+          expect(encodeFn()).toEqual(test.out != null ? test.out : test.in);
         }
-      }
-    });
+      });
+    }
   }
 });

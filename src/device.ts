@@ -75,10 +75,14 @@ export class Device extends EventEmitter {
         debug(this.id, "setting property", property, "to", value, typeof value);
 
         property.value = value;
-        this.client!.publish(split.join("/"), encodePayload(property.value), {
-          retain: property.attributes.retained !== false,
-          qos: 1
-        }).catch(err => debug(this.id, "Error publishing new value", err));
+        this.client!.publish(
+          split.join("/"),
+          encodePayload(datatype, property.value, format),
+          {
+            retain: property.attributes.retained !== false,
+            qos: 1
+          }
+        ).catch(err => debug(this.id, "Error publishing new value", err));
       } catch (err) {
         debug(this.id, "failed to set property", err.message);
       }
@@ -177,7 +181,12 @@ export class Device extends EventEmitter {
             propertyPath + "/$",
             property.attributes
           );
-          await client.publish(propertyPath, encodePayload(property.value), {
+          const payload = encodePayload(
+            property.attributes.datatype,
+            property.value,
+            property.attributes.format
+          );
+          await client.publish(propertyPath, payload, {
             retain: property.attributes.retained !== false,
             qos: 1
           });
