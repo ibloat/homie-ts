@@ -13,7 +13,7 @@ const optionalOptions = {
   settable: false,
   retained: true,
   unit: "",
-  setHook(oldVal, newVal) {}
+  setHook(oldVal: any, newVal: any) {}
 };
 
 it("can be constructed", () => {

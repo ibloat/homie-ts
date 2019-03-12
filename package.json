@@ -1,7 +1,7 @@
 {
   "name": "@ibloat/homie-ts",
   "version": "0.0.6",
-  "description": "Implementation of the homie convention",
+  "description": "WIP implementation of the homie convention",
   "author": "ibloat",
   "engines": {
     "node": ">=8.0"

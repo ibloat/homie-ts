@@ -105,17 +105,6 @@ describe("test property parsing", () => {
           test.in.format
         );
         if (!test.success) {
-          if (
-            typeName == PropertyType.FLOAT ||
-            typeName == PropertyType.INTEGER
-          )
-            console.log(test.in);
-          try {
-            parseFn();
-            console.log("success", test.success);
-          } catch (err) {
-            console.log("failed", test.success, err);
-          }
           expect(parseFn).toThrow(test.out);
         } else {
           expect(parseFn()).toBe(test.out != null ? test.out : test.in.value);
