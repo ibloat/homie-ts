@@ -24,9 +24,11 @@ export interface DeviceOptions {
   nodes?: (Node | NodeOptions)[];
   mqtt?: MQTT.IClientOptions;
   onBroadcast?(self: Device, level: string, message: string): void;
+  additionalAttributes?: { [key: string]: string };
 }
 
 export interface DeviceAttributes {
+  [key: string]: any;
   homie: string;
   state: Lifecycle;
   name: string;
@@ -115,7 +117,13 @@ export class Device extends EventEmitter {
     }
   }
 
-  constructor({ id, baseTopic, mqtt, onBroadcast, ...options }: DeviceOptions) {
+  constructor({
+    id,
+    baseTopic,
+    mqtt,
+    onBroadcast,
+    ...attributes
+  }: DeviceOptions) {
     super();
 
     this.id = id;
@@ -135,11 +143,12 @@ export class Device extends EventEmitter {
     };
 
     const {
+      name,
       extensions = [],
       implementation = "homie-ts",
       nodes = [],
-      ...partialAttributes
-    } = options;
+      additionalAttributes = {}
+    } = attributes;
 
     const nodeInstances: { [key: string]: Node } = {};
     for (const node of nodes) {
@@ -151,7 +160,8 @@ export class Device extends EventEmitter {
     }
 
     this.attributes = {
-      ...partialAttributes,
+      ...additionalAttributes,
+      name,
       homie: "4.0.0",
       extensions,
       implementation,

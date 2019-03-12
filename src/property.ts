@@ -37,6 +37,7 @@ export interface PropertyOptions extends PropertyBase {
   id: string;
   value: any;
   setHook?(oldValue: any, newValue: any): void | boolean | undefined;
+  additionalAttributes?: { [key: string]: string };
 }
 
 interface PropertyAttributes extends PropertyBase {
@@ -73,13 +74,15 @@ export class Property extends EventEmitter {
     setHook,
     retained,
     settable,
-    ...options
+    additionalAttributes = {},
+    ...attributes
   }: PropertyOptions) {
     super();
 
     this.id = id;
     this.attributes = {
-      ...options
+      ...additionalAttributes,
+      ...attributes
     };
 
     if (retained === false) {

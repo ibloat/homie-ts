@@ -1,7 +1,25 @@
 import mqtt from "async-mqtt";
-import { Device, Lifecycle } from "../src/device";
+import { Device, Lifecycle, DeviceOptions } from "../src/device";
+
+const minimumOptions: DeviceOptions = {
+  id: "testdevice",
+  name: "a test device"
+};
+
+const additionalOptions = {
+  baseTopic: "otherhomie",
+  extensions: ["someext"],
+  implementation: "not-homie-ts",
+  nodes: [],
+  mqtt: {},
+  onBroadcast: jest.fn(
+    (self: Device, level: string, message: string) => undefined
+  )
+};
 
 describe("attributes", () => {
+  let device = new Device(minimumOptions);
+  device = new Device({ ...minimumOptions, ...additionalOptions });
   // check if attributes get set correctly
 });
 

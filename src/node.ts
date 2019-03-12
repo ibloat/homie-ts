@@ -9,6 +9,7 @@ export interface NodeOptions {
   name: string;
   type: string;
   properties: (Property | PropertyOptions)[];
+  additionalAttributes?: { [key: string]: string };
 }
 
 interface NodeAttributes {
@@ -25,7 +26,12 @@ export class Node extends EventEmitter {
     return this.attributes.properties;
   }
 
-  constructor({ id, properties = [], ...attributes }: NodeOptions) {
+  constructor({
+    id,
+    properties = [],
+    additionalAttributes = {},
+    ...attributes
+  }: NodeOptions) {
     super();
 
     const propertyInstances: { [key: string]: Property } = {};
@@ -40,6 +46,7 @@ export class Node extends EventEmitter {
 
     this.id = id;
     this.attributes = {
+      ...additionalAttributes,
       ...attributes,
       properties: Object.freeze(propertyInstances)
     };

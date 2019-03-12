@@ -8,7 +8,7 @@ const minimalOptions: PropertyOptions = {
   datatype: PropertyType.BOOLEAN
 };
 
-const optionalOptions = {
+const additionalOptions = {
   format: "",
   settable: false,
   retained: true,
@@ -19,7 +19,7 @@ const optionalOptions = {
 it("can be constructed", () => {
   let property = new Property(minimalOptions);
   expect(property).not.toEqual(undefined);
-  property = new Property({ ...minimalOptions, ...optionalOptions });
+  property = new Property({ ...minimalOptions, ...additionalOptions });
   expect(property).not.toEqual(undefined);
 });
 
