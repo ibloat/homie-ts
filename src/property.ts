@@ -91,6 +91,9 @@ export class Property extends EventEmitter {
     if (settable) {
       this.attributes.settable = true;
     }
+
+    this.attributes = Object.freeze(this.attributes);
+
     if (setHook) {
       this.setHook = setHook;
     }

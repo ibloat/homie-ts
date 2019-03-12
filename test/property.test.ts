@@ -1,34 +1,65 @@
-import { Property, PropertyOptions } from "../src/property";
+import { Property, PropertyOptions, Unit } from "../src/property";
 import { PropertyType } from "../src/misc";
 
-const minimalOptions: PropertyOptions = {
+export const minimalOptions: PropertyOptions = {
   id: "testproperty",
-  value: true,
+  value: "val1",
   name: "this is a test property",
-  datatype: PropertyType.BOOLEAN
+  datatype: PropertyType.ENUM
 };
 
 const additionalOptions = {
-  format: "",
-  settable: false,
-  retained: true,
-  unit: "",
-  setHook(oldVal: any, newVal: any) {}
+  format: "val1,val2",
+  settable: true,
+  retained: false,
+  unit: Unit.AMPERE,
+  additionalAttributes: { foo: "bar" }
 };
 
 it("can be constructed", () => {
-  let property = new Property(minimalOptions);
-  expect(property).not.toEqual(undefined);
-  property = new Property({ ...minimalOptions, ...additionalOptions });
-  expect(property).not.toEqual(undefined);
+  expect(() => new Property(minimalOptions)).not.toThrow();
+  expect(
+    () => new Property({ ...minimalOptions, ...additionalOptions })
+  ).not.toThrow();
 });
 
 it("sets attributes correctly", () => {
   // mandatory
+  let property = new Property(minimalOptions);
+  expect(Object.isFrozen(property.attributes)).toBe(true);
+  expect(property.attributes).toEqual({
+    name: minimalOptions.name,
+    datatype: minimalOptions.datatype
+  });
+
   // optional
+  const { additionalAttributes, ...optionalAttributes } = additionalOptions;
+  property = new Property({ ...minimalOptions, ...optionalAttributes });
+  expect(property.attributes).toEqual({
+    name: minimalOptions.name,
+    datatype: minimalOptions.datatype,
+    ...optionalAttributes
+  });
+
   // arbitrary
+  property = new Property({ ...minimalOptions, additionalAttributes });
+  expect(property.attributes).toEqual({
+    name: minimalOptions.name,
+    datatype: minimalOptions.datatype,
+    ...additionalAttributes
+  });
 });
 
 it("observes setHook", () => {
-  const property = new Property(minimalOptions);
+  const setHook = jest
+    .fn()
+    .mockReturnValueOnce(false)
+    .mockReturnValue(true);
+  const property = new Property({ ...minimalOptions, setHook });
+  expect(property.value).toBe(minimalOptions.value);
+  property.value = "val2";
+  expect(property.value).toBe("val2");
+  property.value = minimalOptions.value;
+  expect(property.value).toBe("val2");
+  expect(setHook.mock.calls.length).toBe(2);
 });
