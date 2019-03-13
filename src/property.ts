@@ -1,4 +1,4 @@
-import { PropertyType } from "./misc";
+import { PropertyType, defaultPayload, validFormat } from "./misc";
 import { EventEmitter } from "events";
 
 import Debug from "debug";
@@ -35,7 +35,7 @@ export interface PropertyBase {
 
 export interface PropertyOptions extends PropertyBase {
   id: string;
-  value: any;
+  value?: any;
   setHook?(oldValue: any, newValue: any): void | boolean | undefined;
   additionalAttributes?: { [key: string]: string };
 }
@@ -57,6 +57,7 @@ export class Property extends EventEmitter {
     return this._value;
   }
   set value(v: any) {
+    if (!v) debugger;
     const oldValue = this._value;
     const inhibitSet = this.setHook ? this.setHook(oldValue, v) : false;
     if (!inhibitSet) {
@@ -72,6 +73,8 @@ export class Property extends EventEmitter {
     id,
     value,
     setHook,
+    format,
+    unit,
     retained,
     settable,
     additionalAttributes = {},
@@ -85,6 +88,17 @@ export class Property extends EventEmitter {
       ...attributes
     };
 
+    if (!validFormat(this.attributes.datatype, format)) {
+      throw new Error(
+        `invalid format '${format}' for datatype ${this.attributes.datatype}`
+      );
+    }
+    if (format) {
+      this.attributes.format = format;
+    }
+    if (unit) {
+      this.attributes.unit = unit;
+    }
     if (retained === false) {
       this.attributes.retained = false;
     }
@@ -98,6 +112,7 @@ export class Property extends EventEmitter {
       this.setHook = setHook;
     }
 
-    this._value = value;
+    this._value =
+      value == null ? defaultPayload(this.attributes.datatype, format) : value;
   }
 }

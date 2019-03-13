@@ -152,6 +152,48 @@ export class ColorHSV {
   }
 }
 
+export function validFormat(type: PropertyType, format?: string) {
+  if (type === PropertyType.COLOR) {
+    return format && ["rgb", "hsv"].includes(format);
+  }
+  if (type === PropertyType.ENUM) {
+    return !!format;
+  }
+  if (type === PropertyType.FLOAT || type === PropertyType.INTEGER) {
+    const parseFn =
+      type === PropertyType.INTEGER ? Number.parseInt : Number.parseFloat;
+    return (
+      !format ||
+      format
+        .split(":")
+        .map(n => parseFn(n))
+        .filter(n => Number.isFinite(n) && !Number.isNaN(n)).length === 2
+    );
+  }
+  return true;
+}
+
+export function defaultPayload(type: PropertyType, format?: string): any {
+  if (type === PropertyType.BOOLEAN) {
+    return true;
+  } else if (type === PropertyType.COLOR) {
+    if (!format) {
+      throw new Error("format required for color");
+    }
+    return format === "rgb" ? new ColorRGB(0, 0, 0) : new ColorHSV(0, 0, 0);
+  } else if (type === PropertyType.ENUM) {
+    if (!format) {
+      throw new Error("format required for enum");
+    }
+    return format.split(",")[0];
+  } else if (type === PropertyType.INTEGER || type === PropertyType.FLOAT) {
+    return 0;
+  } else if (type === PropertyType.STRING) {
+    return "";
+  }
+  throw new Error(`invalid property type (${type})`);
+}
+
 export function encodePayload(
   type: PropertyType,
   payload: object | string | number | boolean | ColorRGB | ColorHSV,
@@ -174,12 +216,22 @@ export function encodePayload(
     }
     return result;
   } else if (type === PropertyType.INTEGER) {
+    if ("number" !== typeof payload) {
+      throw new Error(
+        `value '${payload}' is not a number! (${typeof payload})`
+      );
+    }
     const number = payload as number;
-    if (number > Number.MAX_SAFE_INTEGER || number < Number.MIN_SAFE_INTEGER) {
+    if (!Number.isSafeInteger(number)) {
       throw new Error("integer outside of safe range!");
     }
     return number.toFixed();
   } else if (type === PropertyType.FLOAT) {
+    if ("number" !== typeof payload) {
+      throw new Error(
+        `value '${payload}' is not a number! (${typeof payload})`
+      );
+    }
     const number = payload as number;
     if (Number.isNaN(number) || !Number.isFinite(number)) {
       throw new Error("number can not be NaN or inifinite");
@@ -190,7 +242,7 @@ export function encodePayload(
       typeof payload === "object"
         ? JSON.stringify(payload)
         : payload.toString();
-    if (result.length > 268435456) {
+    if (result.length > MAX_PAYLOAD_LENGTH) {
       throw new Error("the string payload is too big");
     }
     return result;
@@ -233,10 +285,7 @@ export function parsePayload(
       type === PropertyType.FLOAT ? Number.parseFloat : Number.parseInt;
     const parsed = parseFunc(value);
 
-    if (
-      type === PropertyType.INTEGER &&
-      (parsed > Number.MAX_SAFE_INTEGER || parsed < Number.MIN_SAFE_INTEGER)
-    ) {
+    if (type === PropertyType.INTEGER && !Number.isSafeInteger(parsed)) {
       throw new Error(`integer is unsafe ${parsed}`);
     }
 
@@ -257,26 +306,10 @@ export function parsePayload(
       errorMessage = `value ${parsed} outside of format range ${start}:${end}`;
     }
   } else if (type === PropertyType.STRING) {
-    if (value.length <= 268435456) {
+    if (value.length <= MAX_PAYLOAD_LENGTH) {
       return value;
     }
     errorMessage = "string value is too long";
   }
   throw new Error(errorMessage);
-}
-
-export interface Indexable {
-  [index: string]: any;
-}
-
-export abstract class WithAttributes<O, A extends Indexable> {
-  readonly attributes: A;
-
-  protected optionsToAttributes(options: O): A {
-    return (options as any) as A;
-  }
-
-  constructor(options: O) {
-    this.attributes = this.optionsToAttributes(options);
-  }
 }

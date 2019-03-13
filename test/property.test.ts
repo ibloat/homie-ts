@@ -3,12 +3,13 @@ import { PropertyType } from "../src/misc";
 
 export const minimalOptions: PropertyOptions = {
   id: "testproperty",
-  value: "val1",
+  value: true,
   name: "this is a test property",
-  datatype: PropertyType.ENUM
+  datatype: PropertyType.BOOLEAN
 };
 
 const additionalOptions = {
+  datatype: PropertyType.ENUM,
   format: "val1,val2",
   settable: true,
   retained: false,

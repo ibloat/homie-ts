@@ -3,7 +3,8 @@ import {
   encodePayload,
   parsePayload,
   ColorRGB,
-  ColorHSV
+  ColorHSV,
+  MAX_PAYLOAD_LENGTH
 } from "../src/misc";
 
 interface ParseTestCase {
@@ -26,7 +27,7 @@ const parseTests: { [key: string]: ParseTestCase[] } = {
     { in: { value: "a string" }, success: true, desc: "a simple string" },
     { in: { value: "" }, success: true, desc: "an empty string" },
     {
-      in: { value: "s".repeat(268435456 + 1) },
+      in: { value: "s".repeat(MAX_PAYLOAD_LENGTH + 1) },
       success: false,
       desc: "maximum length observed"
     }
@@ -200,14 +201,14 @@ const encodeTests: { [key: string]: EncodeTestCase[] } = {
     { in: "", out: "", success: true, desc: "empty string" },
     { in: "short", out: "short", success: true, desc: "short string" },
     {
-      in: "s".repeat(268435456 + 1),
+      in: "s".repeat(MAX_PAYLOAD_LENGTH + 1),
       success: false,
       desc: "overly long string"
     }
   ],
   [PropertyType.INTEGER]: [
     ...integerEncodeTests,
-    { in: 1.1, out: "1", success: true, desc: "values get rounded" },
+    { in: 1.1, success: false, desc: "no automatic rounding" },
     {
       in: Number.MAX_SAFE_INTEGER + 1,
       success: false,
