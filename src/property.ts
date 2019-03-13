@@ -4,6 +4,11 @@ import { EventEmitter } from "events";
 import Debug from "debug";
 const debug = Debug("homie:property");
 
+/**
+ * Units specified in the Homie Convention.
+ * They are not binding and the user is free to set {@link PropertyOptions.datatype} to whatever they like.
+ * @public
+ */
 export enum Unit {
   CELSIUS = "°C",
   FAHRENHEIT = "°F",
@@ -23,7 +28,7 @@ export enum Unit {
   ENUMERABLE = "#"
 }
 
-export interface PropertyBase {
+interface PropertyBase {
   name: string;
   datatype: PropertyType;
 
@@ -33,6 +38,10 @@ export interface PropertyBase {
   unit?: Unit | string;
 }
 
+/**
+ * Options for {@link Property} creation
+ * @beta
+ */
 export interface PropertyOptions extends PropertyBase {
   id: string;
   value?: any;
@@ -40,10 +49,19 @@ export interface PropertyOptions extends PropertyBase {
   additionalAttributes?: { [key: string]: string };
 }
 
+/**
+ * Valid property attributes when there are no extensions specified
+ * @beta
+ */
 interface PropertyAttributes extends PropertyBase {
   [key: string]: any;
 }
 
+/**
+ * {@link Node} properties
+ * The attributes affect how the property gets advertised.
+ * @public
+ */
 export class Property extends EventEmitter {
   readonly id: string;
   readonly attributes: PropertyAttributes;

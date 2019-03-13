@@ -4,6 +4,10 @@ import { EventEmitter } from "events";
 import Debug from "debug";
 const debug = Debug("homie:node");
 
+/**
+ * Options for {@link Node} creation
+ * @beta
+ */
 export interface NodeOptions {
   id: string;
   name: string;
@@ -12,13 +16,22 @@ export interface NodeOptions {
   additionalAttributes?: { [key: string]: string };
 }
 
-interface NodeAttributes {
+/**
+ * Mandatory attributes for {@link Node}s
+ * @public
+ */
+export interface NodeAttributes {
   [key: string]: any;
   name: string;
   type: string;
   properties: { [key: string]: Property };
 }
 
+/**
+ * A {@link Device} node
+ * It contains {@link Property} instances
+ * @public
+ */
 export class Node extends EventEmitter {
   readonly id: string;
   readonly attributes: NodeAttributes;

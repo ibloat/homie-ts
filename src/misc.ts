@@ -1,7 +1,15 @@
 import cconvert from "color-convert";
 
+/**
+ * Maximum string length as specified by the Homie Convention
+ * @public
+ */
 export const MAX_PAYLOAD_LENGTH = 268435456;
 
+/**
+ * Property types as specified by the Homie Convention
+ * @public
+ */
 export enum PropertyType {
   INTEGER = "integer",
   FLOAT = "float",
@@ -11,6 +19,13 @@ export enum PropertyType {
   COLOR = "color"
 }
 
+/**
+ * MIGHT BE USED SOME DAY - convert cie to RGB
+ * @param x - value of the x component
+ * @param y - value of the y component
+ * @param brightness - brightness to be applied
+ * @alpha
+ */
 export function cie_to_rgb(x: number, y: number, brightness: number) {
   //Set to maximum brightness if no custom value was given (Not the slick ECMAScript 6 way for compatibility reasons)
   if (brightness === undefined) {
@@ -70,6 +85,13 @@ export function cie_to_rgb(x: number, y: number, brightness: number) {
   return [red, green, blue];
 }
 
+/**
+ * MIGHT BE USED SOME DAY - convert RGB color to cie
+ * @param red - red channel
+ * @param green - green channel
+ * @param blue - blue channel
+ * @alpha
+ */
 export function rgb_to_cie(red: number, green: number, blue: number) {
   //Apply a gamma correction to the RGB values, which makes the color more vivid and more the like the color displayed on the screen of your device
   var red =
@@ -99,6 +121,10 @@ export function rgb_to_cie(red: number, green: number, blue: number) {
   return [x, y];
 }
 
+/**
+ * Wraps RGB colors for {@link PropertyType.COLOR} property values
+ * @beta
+ */
 export class ColorRGB {
   r: number;
   g: number;
@@ -125,6 +151,11 @@ export class ColorRGB {
     return [this.r, this.g, this.b].join(",");
   }
 }
+
+/**
+ * Wraps HSV colors for {@link PropertyType.COLOR} property values
+ * @beta
+ */
 export class ColorHSV {
   h: number;
   s: number;
@@ -152,6 +183,12 @@ export class ColorHSV {
   }
 }
 
+/**
+ * Checks if a given format is valid for the property type
+ * @param type - the property type
+ * @param format - the format
+ * @beta
+ */
 export function validFormat(type: PropertyType, format?: string) {
   if (type === PropertyType.COLOR) {
     return format && ["rgb", "hsv"].includes(format);
@@ -173,6 +210,12 @@ export function validFormat(type: PropertyType, format?: string) {
   return true;
 }
 
+/**
+ * Return a default value for the supplied {@link PropertyType}
+ * @param type - the property type
+ * @param format - the format
+ * @beta
+ */
 export function defaultPayload(type: PropertyType, format?: string): any {
   if (type === PropertyType.BOOLEAN) {
     return true;
@@ -194,6 +237,13 @@ export function defaultPayload(type: PropertyType, format?: string): any {
   throw new Error(`invalid property type (${type})`);
 }
 
+/**
+ * Encodes a payload to be set as a property value on the {@link Property} topic
+ * @param type - the property type
+ * @param payload - the value to encode
+ * @param format - the format to adhere to
+ * @beta
+ */
 export function encodePayload(
   type: PropertyType,
   payload: object | string | number | boolean | ColorRGB | ColorHSV,
@@ -250,6 +300,13 @@ export function encodePayload(
   throw new Error(`invalid property type (${type})`);
 }
 
+/**
+ * Parses a payload received from MQTT
+ * @param type - the property type
+ * @param value - the value received
+ * @param format - the format to check against
+ * @beta
+ */
 export function parsePayload(
   type: PropertyType,
   value: string,
