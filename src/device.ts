@@ -6,6 +6,10 @@ import { EventEmitter } from "events";
 import Debug from "debug";
 const debug = Debug("homie:device");
 
+/**
+ * Valid values of a {@link Device}'s {@link DeviceAttributes.state} attribute.
+ * @public
+ */
 export enum Lifecycle {
   INIT = "init",
   READY = "ready",
@@ -15,6 +19,10 @@ export enum Lifecycle {
   ALERT = "alert"
 }
 
+/**
+ * Options for {@link Device} creation
+ * @beta
+ */
 export interface DeviceOptions {
   id: string;
   name: string;
@@ -27,6 +35,10 @@ export interface DeviceOptions {
   additionalAttributes?: { [key: string]: string };
 }
 
+/**
+ * {@link Device} attributes
+ * @public
+ */
 export interface DeviceAttributes {
   [key: string]: any;
   homie: string;
@@ -37,6 +49,11 @@ export interface DeviceAttributes {
   implementation: string;
 }
 
+/**
+ * A Homie Device
+ * It holds the {@link Node}s and is generally responsible for interactions with the broker
+ * @public
+ */
 export class Device extends EventEmitter {
   readonly id: string;
   readonly attributes: DeviceAttributes;
@@ -289,6 +306,7 @@ export class Device extends EventEmitter {
     }
   }
 
+  // @alpha
   async cleanupTopics(staleOnly = false, timeout = 3000): Promise<void> {
     const client = MQTT.connect({ ...this.mqttOptions, will: undefined });
     const subscriptionTopic = `${this.baseTopic}/${this.id}/#`;

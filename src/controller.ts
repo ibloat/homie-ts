@@ -2,6 +2,10 @@ import { Client as MQTTClient } from "mqtt";
 import { default as MQTT, AsyncClient } from "async-mqtt";
 import { parsePayload, PropertyType } from "./misc";
 
+/**
+ * Very experimental Controller options
+ * @alpha
+ */
 export interface ControllerOptions {
   baseTopic?: string;
   mqtt?: MQTT.IClientOptions | MQTTClient;
@@ -25,6 +29,10 @@ interface DeviceLookup {
   };
 }
 
+/**
+ * Tracks {@link Device}s on a base topic
+ * @alpha
+ */
 export class Controller {
   private baseTopic: string = "homie";
   private client: MQTT.AsyncMqttClient;

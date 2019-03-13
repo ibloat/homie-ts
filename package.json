@@ -17,11 +17,13 @@
   "homepage": "https://github.com/ibloat/homie-ts",
   "license": "MIT",
   "scripts": {
-    "build-es5": "tsc --outDir ./build",
-    "build-es6": "tsc -d --outDir ./lib -m es2015",
-    "build": "npm run build-es5 && npm run build-es6",
+    "api-extract": "rimraf ./api && npm run build-esm && api-extractor run",
+    "build-cjs": "tsc --outDir ./build",
+    "build-esm": "tsc -d --outDir ./lib -m es2015",
+    "build": "npm run build-cjs && npm run build-esm",
     "prepare": "npm run build",
-    "test": "jest"
+    "test": "jest",
+    "docs": "npm run api-extract && api-documenter markdown --input-folder api --output-folder docs"
   },
   "main": "build/index.js",
   "module": "lib/index.js",
@@ -48,6 +50,7 @@
     "@types/jest": "^24.0.9",
     "@types/node": "^11.9.4",
     "jest": "^24.3.1",
+    "rimraf": "^2.6.3",
     "ts-jest": "^24.0.0",
     "typescript": "~3.2.2"
   }
