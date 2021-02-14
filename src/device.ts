@@ -336,7 +336,7 @@ export class Device extends EventEmitter {
 
     try {
       await client.subscribe(subscriptionTopic);
-      await new Promise(resolve => setTimeout(() => resolve(), timeout));
+      await new Promise<void>(resolve => setTimeout(() => resolve(), timeout));
       const topics = Object.keys(deviceTopics).filter(
         t => !staleOnly || isStale(t)
       );
